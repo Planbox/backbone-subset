@@ -67,9 +67,14 @@
       });
       return expect(orsonBooks.length).toBe(1);
     });
-    return it('should handle newly added items', function() {
+    it('should handle newly added items', function() {
       expect(orsonBooks.length).toBe(2);
       books.add(shadow);
+      return expect(orsonBooks.length).toBe(3);
+    });
+    return it('should not filter anything is the filter collection is empty', function() {
+      expect(orsonBooks.length).toBe(2);
+      orsonBooks.filters.reset();
       return expect(orsonBooks.length).toBe(3);
     });
   });

@@ -70,6 +70,12 @@
 
     Filter.prototype['match_=='] = function(attribute, value) {
       return function(model) {
+        return model.get(attribute) == value;
+      };
+    };
+
+    Filter.prototype['match_==='] = function(attribute, value) {
+      return function(model) {
         return model.get(attribute) === value;
       };
     };
@@ -89,10 +95,25 @@
 
     Filters.prototype.model = Subset.Filter;
 
+    Filters.prototype.initialize = function() {
+      return this.on('all', this.clearCache, this);
+    };
+
     Filters.prototype.matchers = function() {
+      return this._matchers || (this._matchers = this.buildMatchers());
+    };
+
+    Filters.prototype.buildMatchers = function() {
+      console.log(this.toJSON(), this.map(function(filter) {
+        return filter.buildMatcher();
+      }));
       return this.map(function(filter) {
         return filter.buildMatcher();
       });
+    };
+
+    Filters.prototype.clearCache = function() {
+      return this._matchers = null;
     };
 
     Filters.prototype.match = function(model) {

@@ -41,14 +41,26 @@ class @Subset.Filter extends Backbone.Model
     @["match_#{@get('operator')}"](@get('attribute'), @get('value'))
 
   'match_==': (attribute, value) ->
-    (model) ->
-      model.get(attribute) == value
+    (model) -> `model.get(attribute) == value`
+
+  'match_===': (attribute, value) ->
+    (model) -> model.get(attribute) == value
 
 class @Subset.Filters extends Backbone.Collection
   model: Subset.Filter
 
+  initialize: () ->
+    @on('all', @clearCache, @)
+
   matchers: ->
-    @map (filter) -> filter.buildMatcher()
+    @_matchers or= @buildMatchers()
+
+  buildMatchers: ->
+    console.log(@toJSON(), @map((filter) -> filter.buildMatcher()))
+    @map((filter) -> filter.buildMatcher())
+
+  clearCache: ->
+    @_matchers = null
 
   match: (model) =>
     for matcher in @matchers()

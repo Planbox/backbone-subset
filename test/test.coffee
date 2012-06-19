@@ -43,3 +43,8 @@ describe 'Subset', ->
     expect(orsonBooks.length).toBe(2)
     books.add shadow
     expect(orsonBooks.length).toBe(3)
+
+  it 'should not filter anything is the filter collection is empty', ->
+    expect(orsonBooks.length).toBe(2)
+    orsonBooks.filters.reset()
+    expect(orsonBooks.length).toBe(3)
