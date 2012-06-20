@@ -44,7 +44,7 @@
     };
 
     Subset.prototype.query = function() {
-      return this.source.filter(this.filters.match);
+      return _.filter(this.source.models, this.filters.match);
     };
 
     return Subset;

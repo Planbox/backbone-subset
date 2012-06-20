@@ -29,7 +29,7 @@ class @Subset extends Backbone.View
       @collection.remove model
 
   query: ->
-    @source.filter(@filters.match)
+    _.filter(@source.models, @filters.match)
 
 class @Subset.Filter extends Backbone.Model
   defaults: 
