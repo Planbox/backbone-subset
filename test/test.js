@@ -50,32 +50,32 @@
       });
     });
     it('should filter models', function() {
-      return expect(orsonBooks.length).toBe(2);
+      return expect(orsonBooks.collection.length).toBe(2);
     });
     it('should refresh if a criteria is added', function() {
-      expect(orsonBooks.length).toBe(2);
+      expect(orsonBooks.collection.length).toBe(2);
       orsonBooks.filters.add({
         attribute: 'name',
         value: "Ender's Game"
       });
-      return expect(orsonBooks.length).toBe(1);
+      return expect(orsonBooks.collection.length).toBe(1);
     });
     it('should refresh if a criteria is changed', function() {
-      expect(orsonBooks.length).toBe(2);
+      expect(orsonBooks.collection.length).toBe(2);
       orsonBooks.filters.first().set({
         value: "Douglas Adams"
       });
-      return expect(orsonBooks.length).toBe(1);
+      return expect(orsonBooks.collection.length).toBe(1);
     });
     it('should handle newly added items', function() {
-      expect(orsonBooks.length).toBe(2);
+      expect(orsonBooks.collection.length).toBe(2);
       books.add(shadow);
-      return expect(orsonBooks.length).toBe(3);
+      return expect(orsonBooks.collection.length).toBe(3);
     });
     return it('should not filter anything is the filter collection is empty', function() {
-      expect(orsonBooks.length).toBe(2);
+      expect(orsonBooks.collection.length).toBe(2);
       orsonBooks.filters.reset();
-      return expect(orsonBooks.length).toBe(3);
+      return expect(orsonBooks.collection.length).toBe(3);
     });
   });
 

@@ -27,24 +27,24 @@ describe 'Subset', ->
     ])
 
   it 'should filter models', ->
-    expect(orsonBooks.length).toBe(2)
+    expect(orsonBooks.collection.length).toBe(2)
 
   it 'should refresh if a criteria is added', ->
-    expect(orsonBooks.length).toBe(2)
+    expect(orsonBooks.collection.length).toBe(2)
     orsonBooks.filters.add(attribute: 'name', value: "Ender's Game")
-    expect(orsonBooks.length).toBe(1)
+    expect(orsonBooks.collection.length).toBe(1)
 
   it 'should refresh if a criteria is changed', ->
-    expect(orsonBooks.length).toBe(2)
+    expect(orsonBooks.collection.length).toBe(2)
     orsonBooks.filters.first().set(value: "Douglas Adams")
-    expect(orsonBooks.length).toBe(1)
+    expect(orsonBooks.collection.length).toBe(1)
 
   it 'should handle newly added items', ->
-    expect(orsonBooks.length).toBe(2)
+    expect(orsonBooks.collection.length).toBe(2)
     books.add shadow
-    expect(orsonBooks.length).toBe(3)
+    expect(orsonBooks.collection.length).toBe(3)
 
   it 'should not filter anything is the filter collection is empty', ->
-    expect(orsonBooks.length).toBe(2)
+    expect(orsonBooks.collection.length).toBe(2)
     orsonBooks.filters.reset()
-    expect(orsonBooks.length).toBe(3)
+    expect(orsonBooks.collection.length).toBe(3)

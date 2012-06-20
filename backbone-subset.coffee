@@ -1,34 +1,32 @@
-class @Subset extends Backbone.Collection
-
-  constructor: (args...) ->
-    super(args...)
-    @filterAll()
+class @Subset extends Backbone.View
 
   initialize: (options) ->
     options || (options = {})
-    @source = options.source
+    @source = options.source || new Backbone.Collection
+    @collection = new options.source.constructor
     @filters = new Subset.Filters(options.filters)
     @source.on('reset', @filterAll, @)
     @source.on('add', @modelAdded, @)
     @source.on('remove', @modelRemoved, @)
     @source.on('change', @modelChanged, @)
     @filters.on('all', @filterAll, @)
+    @filterAll()
 
   filterAll: ->
-    @reset(@query())
+    @collection.reset(@query())
     @
 
   modelAdded: (model) ->
-    @add model if @filters.match model
+    @collection.add model if @filters.match model
 
   modelRemoved: (model) ->
-    @remove model
+    @collection.remove model
 
   modelChanged: (model) ->
     if @filters.match model
-      @add model
+      @collection.add model
     else
-      @remove model
+      @collection.remove model
 
   query: ->
     @source.filter(@filters.match)
@@ -56,7 +54,6 @@ class @Subset.Filters extends Backbone.Collection
     @_matchers or= @buildMatchers()
 
   buildMatchers: ->
-    console.log(@toJSON(), @map((filter) -> filter.buildMatcher()))
     @map((filter) -> filter.buildMatcher())
 
   clearCache: ->

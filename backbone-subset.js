@@ -1,46 +1,45 @@
 (function() {
-  var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; }, __slice = Array.prototype.slice, __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+  var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; }, __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   this.Subset = (function() {
 
-    __extends(Subset, Backbone.Collection);
+    __extends(Subset, Backbone.View);
 
     function Subset() {
-      var args;
-      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      Subset.__super__.constructor.apply(this, args);
-      this.filterAll();
+      Subset.__super__.constructor.apply(this, arguments);
     }
 
     Subset.prototype.initialize = function(options) {
       options || (options = {});
-      this.source = options.source;
+      this.source = options.source || new Backbone.Collection;
+      this.collection = new options.source.constructor;
       this.filters = new Subset.Filters(options.filters);
       this.source.on('reset', this.filterAll, this);
       this.source.on('add', this.modelAdded, this);
       this.source.on('remove', this.modelRemoved, this);
       this.source.on('change', this.modelChanged, this);
-      return this.filters.on('all', this.filterAll, this);
+      this.filters.on('all', this.filterAll, this);
+      return this.filterAll();
     };
 
     Subset.prototype.filterAll = function() {
-      this.reset(this.query());
+      this.collection.reset(this.query());
       return this;
     };
 
     Subset.prototype.modelAdded = function(model) {
-      if (this.filters.match(model)) return this.add(model);
+      if (this.filters.match(model)) return this.collection.add(model);
     };
 
     Subset.prototype.modelRemoved = function(model) {
-      return this.remove(model);
+      return this.collection.remove(model);
     };
 
     Subset.prototype.modelChanged = function(model) {
       if (this.filters.match(model)) {
-        return this.add(model);
+        return this.collection.add(model);
       } else {
-        return this.remove(model);
+        return this.collection.remove(model);
       }
     };
 
@@ -104,9 +103,6 @@
     };
 
     Filters.prototype.buildMatchers = function() {
-      console.log(this.toJSON(), this.map(function(filter) {
-        return filter.buildMatcher();
-      }));
       return this.map(function(filter) {
         return filter.buildMatcher();
       });
