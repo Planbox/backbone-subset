@@ -12,7 +12,7 @@
     Subset.prototype.initialize = function(options) {
       options || (options = {});
       this.source = options.source || new Backbone.Collection;
-      this.collection = new options.source.constructor;
+      this.collection || (this.collection = new options.source.constructor);
       this.filters = new Subset.Filters(options.filters);
       this.source.on('reset', this.filterAll, this);
       this.source.on('add', this.modelAdded, this);

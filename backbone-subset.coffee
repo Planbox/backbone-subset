@@ -3,7 +3,7 @@ class @Subset extends Backbone.View
   initialize: (options) ->
     options || (options = {})
     @source = options.source || new Backbone.Collection
-    @collection = new options.source.constructor
+    @collection or= new options.source.constructor
     @filters = new Subset.Filters(options.filters)
     @source.on('reset', @filterAll, @)
     @source.on('add', @modelAdded, @)
