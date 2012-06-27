@@ -63,6 +63,10 @@
       'operator': '=='
     };
 
+    Filter.prototype.match = function(model) {
+      return this.buildMatcher()(model);
+    };
+
     Filter.prototype.buildMatcher = function() {
       return this["match_" + (this.get('operator'))](this.get('attribute'), this.get('value'));
     };
@@ -76,6 +80,24 @@
     Filter.prototype['match_==='] = function(attribute, value) {
       return function(model) {
         return model.get(attribute) === value;
+      };
+    };
+
+    Filter.prototype.match_in = function(attribute, value) {
+      return function(model) {
+        return _(value).include(model.get(attribute));
+      };
+    };
+
+    Filter.prototype.match_any = function(attribute, value) {
+      return function(model) {
+        return _.intersection(model.get(attribute), value).length > 0;
+      };
+    };
+
+    Filter.prototype.match_all = function(attribute, value) {
+      return function(model) {
+        return _.intersection(model.get(attribute), value).length === value.length;
       };
     };
 

@@ -35,6 +35,9 @@ class @Subset.Filter extends Backbone.Model
   defaults: 
     'operator': '=='
 
+  match: (model)->
+    @buildMatcher()(model)
+
   buildMatcher: ->
     @["match_#{@get('operator')}"](@get('attribute'), @get('value'))
 
@@ -43,6 +46,15 @@ class @Subset.Filter extends Backbone.Model
 
   'match_===': (attribute, value) ->
     (model) -> model.get(attribute) == value
+
+  match_in: (attribute, value) ->
+    (model) -> _(value).include(model.get(attribute))
+
+  match_any: (attribute, value) ->
+    (model) -> _.intersection(model.get(attribute), value).length > 0
+
+  match_all: (attribute, value) ->
+    (model) -> _.intersection(model.get(attribute), value).length is value.length
 
 class @Subset.Filters extends Backbone.Collection
   model: Subset.Filter
