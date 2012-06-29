@@ -12,8 +12,9 @@ class @Subset extends Backbone.View
     @filters.on('all', @filterAll, @)
     @filterAll()
 
-  filterAll: ->
-    @collection.reset(@query())
+  filterAll: (eventName) ->
+    # Avoid reseting twice because "change" and "change:<attribute>" are both catched by "all" 
+    @collection.reset(@query()) unless eventName == 'change'
     @
 
   modelAdded: (model) ->

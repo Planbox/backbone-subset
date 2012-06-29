@@ -22,8 +22,8 @@
       return this.filterAll();
     };
 
-    Subset.prototype.filterAll = function() {
-      this.collection.reset(this.query());
+    Subset.prototype.filterAll = function(eventName) {
+      if (eventName !== 'change') this.collection.reset(this.query());
       return this;
     };
 

@@ -56,6 +56,23 @@ describe 'Subset', ->
     orsonBooks.filters.reset()
     expect(orsonBooks.collection.length).toBe(3)
 
+  describe 'triggered events', ->
+    eventsCount = 0
+
+    beforeEach ->
+      eventsCount = 0
+
+    it 'should trigger only one reset when adding a filter', ->
+      orsonBooks.collection.on 'reset', -> eventsCount += 1
+      orsonBooks.filters.add(attribute: 'name', value: ender.name)
+      expect(eventsCount).toEqual 1
+
+    it 'should trigger only one reset when editing a filter', ->
+      orsonBooks.filters.add(attribute: 'name', value: ender.name)
+      orsonBooks.collection.on 'reset', -> eventsCount += 1
+      orsonBooks.filters.first().set(value: h2g2.name)
+      expect(eventsCount).toEqual 1
+
   describe 'operators', ->
     book = new Book(h2g2)
 

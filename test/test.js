@@ -95,6 +95,36 @@
       orsonBooks.filters.reset();
       return expect(orsonBooks.collection.length).toBe(3);
     });
+    describe('triggered events', function() {
+      var eventsCount;
+      eventsCount = 0;
+      beforeEach(function() {
+        return eventsCount = 0;
+      });
+      it('should trigger only one reset when adding a filter', function() {
+        orsonBooks.collection.on('reset', function() {
+          return eventsCount += 1;
+        });
+        orsonBooks.filters.add({
+          attribute: 'name',
+          value: ender.name
+        });
+        return expect(eventsCount).toEqual(1);
+      });
+      return it('should trigger only one reset when editing a filter', function() {
+        orsonBooks.filters.add({
+          attribute: 'name',
+          value: ender.name
+        });
+        orsonBooks.collection.on('reset', function() {
+          return eventsCount += 1;
+        });
+        orsonBooks.filters.first().set({
+          value: h2g2.name
+        });
+        return expect(eventsCount).toEqual(1);
+      });
+    });
     return describe('operators', function() {
       var book;
       book = new Book(h2g2);
