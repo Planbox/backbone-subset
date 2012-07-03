@@ -24,8 +24,18 @@ describe 'Subset', ->
     name: "Shadow Saga"
     author: 'Orson Scott Card'
     categories: ['scify']
+  menAtArms =
+    id: 72
+    name: "Men at Arms"
+    author: "Terry Pratchett"
+    categories: ['fantasy', 'humour']
+  guardsGuards = 
+    id: 75
+    name: "Guards! Guards!"
+    author: "Terry Pratchett"
+    categories: ['fantasy', 'humour']
 
-  orsonBooks = books = null
+  orsonBooks = books = booksSelection = terryBooks = menAtArmsBook = null
 
   beforeEach ->
     books = new Books([h2g2, ender, homecoming])
@@ -55,6 +65,45 @@ describe 'Subset', ->
     expect(orsonBooks.collection.length).toBe(2)
     orsonBooks.filters.reset()
     expect(orsonBooks.collection.length).toBe(3)
+
+  describe 'union', ->
+
+    beforeEach ->
+      menAtArmsBook = new Book(menAtArms)
+      terryBooks = new Books([menAtArmsBook])
+      booksSelection = new Union(
+        collection: new Books,
+        sources: [orsonBooks.collection, terryBooks]
+      )
+
+    it 'should contain books from unified collection', ->
+      expect(booksSelection.collection.contains(menAtArmsBook)).toBe true
+
+    it 'should however not consider them as selected', ->
+      expect(orsonBooks.filters.match(menAtArmsBook)).toBe false
+
+    it 'should propagate unified collection removals', ->
+      expect(booksSelection.collection.length).toBe 3
+      terryBooks.remove(menAtArmsBook)
+      expect(booksSelection.collection.length).toBe 2
+
+    it 'should propagate unified collection insertions', ->
+      expect(booksSelection.collection.length).toBe 3
+      terryBooks.add(guardsGuards)
+      expect(booksSelection.collection.length).toBe 4
+
+    it 'should not propagate unified collection removals if the same model is also selected throught the source collection', ->
+      orsonBook = orsonBooks.collection.first()
+      expect(booksSelection.collection.length).toBe 3
+      terryBooks.add(orsonBook)
+      expect(booksSelection.collection.length).toBe 3
+      terryBooks.remove(orsonBook)
+      expect(booksSelection.collection.length).toBe 3
+
+    it 'should propagate resets', ->
+      expect(booksSelection.collection.length).toBe 3
+      terryBooks.reset()
+      expect(booksSelection.collection.length).toBe 2
 
   describe 'triggered events', ->
     eventsCount = 0

@@ -1,9 +1,8 @@
-class @Subset extends Backbone.View
+class @Subset
 
-  initialize: (options) ->
-    options || (options = {})
-    @source = options.source || new Backbone.Collection
-    @collection or= new options.source.constructor
+  constructor: (options={}) ->
+    @source = options.source or new Backbone.Collection
+    @collection = options.collection or new options.source.constructor
     @filters = new Subset.Filters(options.filters)
     @source.on('reset', @filterAll, @)
     @source.on('add', @modelAdded, @)
@@ -14,7 +13,9 @@ class @Subset extends Backbone.View
 
   filterAll: (eventName) ->
     # Avoid reseting twice because "change" and "change:<attribute>" are both catched by "all" 
-    @collection.reset(@query()) unless eventName == 'change'
+    unless eventName == 'change'
+      @collection.reset(@query())
+      @collection.add(@union.toArray()) if @union
     @
 
   modelAdded: (model) ->
@@ -31,6 +32,9 @@ class @Subset extends Backbone.View
 
   query: ->
     _.filter(@source.models, @filters.match)
+
+  match: (args...) ->
+    @filters.match args...
 
 class @Subset.Filter extends Backbone.Model
   defaults: 
@@ -76,3 +80,22 @@ class @Subset.Filters extends Backbone.Collection
     for matcher in @matchers()
       return false unless matcher(model)
     true
+
+class @Union
+
+  constructor: (options) ->
+    @collection = options.collection or new Backbone.Collection()
+    @sources = options.sources
+
+    for source in @sources
+      source.on('add', @collection.add, @collection)
+      source.on('remove', @removeItem, @)
+      source.on('reset', @reset, @) # TODO: can probably be optimized
+    @reset()
+
+  removeItem: (model) ->
+    @collection.remove(model) unless _(@sources).any((source) -> source.get(model.id))
+
+  reset: ->
+    @collection.reset _.flatten(@sources.map((s) -> s.toArray()))
+

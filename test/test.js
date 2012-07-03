@@ -29,7 +29,7 @@
   })();
 
   describe('Subset', function() {
-    var books, ender, h2g2, homecoming, orsonBooks, shadow;
+    var books, booksSelection, ender, guardsGuards, h2g2, homecoming, menAtArms, menAtArmsBook, orsonBooks, shadow, terryBooks;
     h2g2 = {
       id: 42,
       name: "The Hitchhiker's Guide to the Galaxy",
@@ -54,7 +54,19 @@
       author: 'Orson Scott Card',
       categories: ['scify']
     };
-    orsonBooks = books = null;
+    menAtArms = {
+      id: 72,
+      name: "Men at Arms",
+      author: "Terry Pratchett",
+      categories: ['fantasy', 'humour']
+    };
+    guardsGuards = {
+      id: 75,
+      name: "Guards! Guards!",
+      author: "Terry Pratchett",
+      categories: ['fantasy', 'humour']
+    };
+    orsonBooks = books = booksSelection = terryBooks = menAtArmsBook = null;
     beforeEach(function() {
       books = new Books([h2g2, ender, homecoming]);
       return orsonBooks = new Subset({
@@ -94,6 +106,46 @@
       expect(orsonBooks.collection.length).toBe(2);
       orsonBooks.filters.reset();
       return expect(orsonBooks.collection.length).toBe(3);
+    });
+    describe('union', function() {
+      beforeEach(function() {
+        menAtArmsBook = new Book(menAtArms);
+        terryBooks = new Books([menAtArmsBook]);
+        return booksSelection = new Union({
+          collection: new Books,
+          sources: [orsonBooks.collection, terryBooks]
+        });
+      });
+      it('should contain books from unified collection', function() {
+        return expect(booksSelection.collection.contains(menAtArmsBook)).toBe(true);
+      });
+      it('should however not consider them as selected', function() {
+        return expect(orsonBooks.filters.match(menAtArmsBook)).toBe(false);
+      });
+      it('should propagate unified collection removals', function() {
+        expect(booksSelection.collection.length).toBe(3);
+        terryBooks.remove(menAtArmsBook);
+        return expect(booksSelection.collection.length).toBe(2);
+      });
+      it('should propagate unified collection insertions', function() {
+        expect(booksSelection.collection.length).toBe(3);
+        terryBooks.add(guardsGuards);
+        return expect(booksSelection.collection.length).toBe(4);
+      });
+      it('should not propagate unified collection removals if the same model is also selected throught the source collection', function() {
+        var orsonBook;
+        orsonBook = orsonBooks.collection.first();
+        expect(booksSelection.collection.length).toBe(3);
+        terryBooks.add(orsonBook);
+        expect(booksSelection.collection.length).toBe(3);
+        terryBooks.remove(orsonBook);
+        return expect(booksSelection.collection.length).toBe(3);
+      });
+      return it('should propagate resets', function() {
+        expect(booksSelection.collection.length).toBe(3);
+        terryBooks.reset();
+        return expect(booksSelection.collection.length).toBe(2);
+      });
     });
     describe('triggered events', function() {
       var eventsCount;
