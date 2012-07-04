@@ -33,7 +33,7 @@
     };
 
     Subset.prototype.modelChanged = function(model) {
-      if (this.filters.match(model)) {
+      if (this.source.get(model.id) && this.filters.match(model)) {
         return this.collection.add(model);
       } else {
         return this.collection.remove(model);

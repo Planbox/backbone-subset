@@ -25,7 +25,7 @@ class @Subset
     @collection.remove model
 
   modelChanged: (model) ->
-    if @filters.match model
+    if @source.get(model.id) and @filters.match model
       @collection.add model
     else
       @collection.remove model
