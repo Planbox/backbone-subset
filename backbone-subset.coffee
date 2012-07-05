@@ -13,9 +13,7 @@ class @Subset
 
   filterAll: (eventName) ->
     # Avoid reseting twice because "change" and "change:<attribute>" are both catched by "all" 
-    unless eventName == 'change'
-      @collection.reset(@query())
-      @collection.add(@union.toArray()) if @union
+    @collection.reset(@query()) unless eventName == 'change'
     @
 
   modelAdded: (model) ->
