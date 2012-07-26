@@ -36,6 +36,7 @@ describe 'Subset', ->
     categories: ['fantasy', 'humour']
 
   orsonBooks = books = booksSelection = terryBooks = menAtArmsBook = null
+  authorFilter = categoryFilter = null
 
   beforeEach ->
     books = new Books([h2g2, ender, homecoming])
@@ -66,15 +67,32 @@ describe 'Subset', ->
     orsonBooks.filters.reset()
     expect(orsonBooks.collection.length).toBe(3)
 
+  describe 'intermediate collections', ->
+
+    beforeEach ->
+      books = new Books([h2g2, ender, homecoming, shadow, menAtArms, guardsGuards])
+      authorFilter = new Subset.Filter(attribute: 'author', value: 'Douglas Adams')
+      categoryFilter = new Subset.Filter(attribute: 'categories', value: ['humour'], operator: 'any')
+      booksSelection = new Subset(source: books, filters: [categoryFilter, authorFilter])
+
+    it 'allow to access intermediate results', ->
+      expect(booksSelection.collection.length).toBe 1
+      expect(booksSelection.after(authorFilter).length).toBe 1
+      expect(booksSelection.after(categoryFilter).length).toBe 3
+
+    it 'allow to access query state before the filter', ->
+      expect(booksSelection.collection.length).toBe 1
+      expect(booksSelection.before(authorFilter).length).toBe 3
+      expect(booksSelection.before(categoryFilter).length).toBe 6
+
   describe 'union', ->
 
     beforeEach ->
       menAtArmsBook = new Book(menAtArms)
       terryBooks = new Books([menAtArmsBook])
-      booksSelection = new Union(
-        collection: new Books,
+      booksSelection = new Union
+        collection: new Books
         sources: [orsonBooks.collection, terryBooks]
-      )
 
     it 'should contain books from unified collection', ->
       expect(booksSelection.collection.contains(menAtArmsBook)).toBe true

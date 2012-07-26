@@ -29,7 +29,7 @@
   })();
 
   describe('Subset', function() {
-    var books, booksSelection, ender, guardsGuards, h2g2, homecoming, menAtArms, menAtArmsBook, orsonBooks, shadow, terryBooks;
+    var authorFilter, books, booksSelection, categoryFilter, ender, guardsGuards, h2g2, homecoming, menAtArms, menAtArmsBook, orsonBooks, shadow, terryBooks;
     h2g2 = {
       id: 42,
       name: "The Hitchhiker's Guide to the Galaxy",
@@ -67,6 +67,7 @@
       categories: ['fantasy', 'humour']
     };
     orsonBooks = books = booksSelection = terryBooks = menAtArmsBook = null;
+    authorFilter = categoryFilter = null;
     beforeEach(function() {
       books = new Books([h2g2, ender, homecoming]);
       return orsonBooks = new Subset({
@@ -106,6 +107,34 @@
       expect(orsonBooks.collection.length).toBe(2);
       orsonBooks.filters.reset();
       return expect(orsonBooks.collection.length).toBe(3);
+    });
+    describe('intermediate collections', function() {
+      beforeEach(function() {
+        books = new Books([h2g2, ender, homecoming, shadow, menAtArms, guardsGuards]);
+        authorFilter = new Subset.Filter({
+          attribute: 'author',
+          value: 'Douglas Adams'
+        });
+        categoryFilter = new Subset.Filter({
+          attribute: 'categories',
+          value: ['humour'],
+          operator: 'any'
+        });
+        return booksSelection = new Subset({
+          source: books,
+          filters: [categoryFilter, authorFilter]
+        });
+      });
+      it('allow to access intermediate results', function() {
+        expect(booksSelection.collection.length).toBe(1);
+        expect(booksSelection.after(authorFilter).length).toBe(1);
+        return expect(booksSelection.after(categoryFilter).length).toBe(3);
+      });
+      return it('allow to access query state before the filter', function() {
+        expect(booksSelection.collection.length).toBe(1);
+        expect(booksSelection.before(authorFilter).length).toBe(3);
+        return expect(booksSelection.before(categoryFilter).length).toBe(6);
+      });
     });
     describe('union', function() {
       beforeEach(function() {

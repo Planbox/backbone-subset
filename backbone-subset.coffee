@@ -1,6 +1,7 @@
 class @Subset
 
   constructor: (options={}) ->
+    @intermediateCollections = {}
     @source = options.source or new Backbone.Collection
     @collection = options.collection or new options.source.constructor
     @filters = new Subset.Filters(options.filters)
@@ -12,9 +13,27 @@ class @Subset
     @filterAll()
 
   filterAll: (eventName) ->
-    # Avoid reseting twice because "change" and "change:<attribute>" are both catched by "all" 
-    @collection.reset(@query()) unless eventName == 'change'
+    return @ if eventName is 'change' # Avoid reseting twice because "change" and "change:<attribute>" are both catched by "all" 
+
+    oldCache = @intermediateCollections
+    @intermediateCollections = {}
+    previous = @source
+
+    @filters.each (filter, index) =>
+      intermediate = @intermediateCollections[filter.cid] = oldCache[filter.cid] or new @collection.constructor
+      intermediate.reset(filter.select(previous))
+      previous = intermediate
+
+    @collection.reset(previous.models)
     @
+
+  after: (filter) ->
+    @intermediateCollections[filter.cid] or @collection
+
+  before: (filter) ->
+    index = @filters.indexOf(filter)
+    return @source if index is 0
+    @intermediateCollections[@filters.at(index - 1)?.cid] || @collection
 
   modelAdded: (model) ->
     @collection.add model if @filters.match model
@@ -38,8 +57,11 @@ class @Subset.Filter extends Backbone.Model
   defaults: 
     'operator': '=='
 
-  match: (model)->
+  match: (model) ->
     @buildMatcher()(model)
+
+  select: (collection) ->
+    _.filter(collection.models, this.buildMatcher())
 
   buildMatcher: ->
     @["match_#{@get('operator')}"](@get('attribute'), @get('value'))

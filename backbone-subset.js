@@ -5,6 +5,7 @@
 
     function Subset(options) {
       if (options == null) options = {};
+      this.intermediateCollections = {};
       this.source = options.source || new Backbone.Collection;
       this.collection = options.collection || new options.source.constructor;
       this.filters = new Subset.Filters(options.filters);
@@ -17,11 +18,31 @@
     }
 
     Subset.prototype.filterAll = function(eventName) {
-      if (eventName !== 'change') {
-        this.collection.reset(this.query());
-        if (this.union) this.collection.add(this.union.toArray());
-      }
+      var oldCache, previous;
+      var _this = this;
+      if (eventName === 'change') return this;
+      oldCache = this.intermediateCollections;
+      this.intermediateCollections = {};
+      previous = this.source;
+      this.filters.each(function(filter, index) {
+        var intermediate;
+        intermediate = _this.intermediateCollections[filter.cid] = oldCache[filter.cid] || new _this.collection.constructor;
+        intermediate.reset(filter.select(previous));
+        return previous = intermediate;
+      });
+      this.collection.reset(previous.models);
       return this;
+    };
+
+    Subset.prototype.after = function(filter) {
+      return this.intermediateCollections[filter.cid] || this.collection;
+    };
+
+    Subset.prototype.before = function(filter) {
+      var index, _ref;
+      index = this.filters.indexOf(filter);
+      if (index === 0) return this.source;
+      return this.intermediateCollections[(_ref = this.filters.at(index - 1)) != null ? _ref.cid : void 0] || this.collection;
     };
 
     Subset.prototype.modelAdded = function(model) {
@@ -68,6 +89,10 @@
 
     Filter.prototype.match = function(model) {
       return this.buildMatcher()(model);
+    };
+
+    Filter.prototype.select = function(collection) {
+      return _.filter(collection.models, this.buildMatcher());
     };
 
     Filter.prototype.buildMatcher = function() {
