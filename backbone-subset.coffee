@@ -43,7 +43,7 @@ class @Subset
 
   modelChanged: (model) ->
     if @source.get(model.id) and @filters.match model
-      @collection.add model
+      @collection.add model unless @collection.get(model.id)
     else
       @collection.remove model
 
@@ -76,10 +76,10 @@ class @Subset.Filter extends Backbone.Model
     (model) -> _(value).include(model.get(attribute))
 
   match_any: (attribute, value) ->
-    (model) -> _.intersection(model.get(attribute), value).length > 0
+    (model) -> _.intersection(model.get(attribute) or [], value).length > 0
 
   match_all: (attribute, value) ->
-    (model) -> _.intersection(model.get(attribute), value).length is value.length
+    (model) -> _.intersection(model.get(attribute) or [], value).length is value.length
 
 class @Subset.Filters extends Backbone.Collection
   model: Subset.Filter
@@ -88,18 +88,17 @@ class @Subset.Filters extends Backbone.Collection
     @on('all', @clearCache, @)
 
   matchers: ->
-    @_matchers or= @buildMatchers()
-
-  buildMatchers: ->
     @map((filter) -> filter.buildMatcher())
 
-  clearCache: ->
-    @_matchers = null
+  buildMatcher: ->
+    matchers = @matchers()
+    (model) ->
+      for matcher in matchers
+        return false unless matcher(model)
+      true
 
   match: (model) =>
-    for matcher in @matchers()
-      return false unless matcher(model)
-    true
+    @buildMatcher()(model)
 
 class @Union
 
@@ -108,14 +107,17 @@ class @Union
     @sources = options.sources
 
     for source in @sources
-      source.on('add', @collection.add, @collection)
+      source.on('add', @addItem, @)
       source.on('remove', @removeItem, @)
       source.on('reset', @reset, @) # TODO: can probably be optimized
     @reset()
+
+  addItem: (model) ->
+    @collection.add(model) unless @collection.get(model.id)
 
   removeItem: (model) ->
     @collection.remove(model) unless _(@sources).any((source) -> source.get(model.id))
 
   reset: ->
-    @collection.reset _.flatten(@sources.map((s) -> s.toArray()))
+    @collection.reset _.flatten(s.toArray() for s in @sources)
 

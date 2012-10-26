@@ -55,7 +55,7 @@
 
     Subset.prototype.modelChanged = function(model) {
       if (this.source.get(model.id) && this.filters.match(model)) {
-        return this.collection.add(model);
+        if (!this.collection.get(model.id)) return this.collection.add(model);
       } else {
         return this.collection.remove(model);
       }
@@ -119,13 +119,13 @@
 
     Filter.prototype.match_any = function(attribute, value) {
       return function(model) {
-        return _.intersection(model.get(attribute), value).length > 0;
+        return _.intersection(model.get(attribute) || [], value).length > 0;
       };
     };
 
     Filter.prototype.match_all = function(attribute, value) {
       return function(model) {
-        return _.intersection(model.get(attribute), value).length === value.length;
+        return _.intersection(model.get(attribute) || [], value).length === value.length;
       };
     };
 
@@ -149,27 +149,26 @@
     };
 
     Filters.prototype.matchers = function() {
-      return this._matchers || (this._matchers = this.buildMatchers());
-    };
-
-    Filters.prototype.buildMatchers = function() {
       return this.map(function(filter) {
         return filter.buildMatcher();
       });
     };
 
-    Filters.prototype.clearCache = function() {
-      return this._matchers = null;
+    Filters.prototype.buildMatcher = function() {
+      var matchers;
+      matchers = this.matchers();
+      return function(model) {
+        var matcher, _i, _len;
+        for (_i = 0, _len = matchers.length; _i < _len; _i++) {
+          matcher = matchers[_i];
+          if (!matcher(model)) return false;
+        }
+        return true;
+      };
     };
 
     Filters.prototype.match = function(model) {
-      var matcher, _i, _len, _ref;
-      _ref = this.matchers();
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        matcher = _ref[_i];
-        if (!matcher(model)) return false;
-      }
-      return true;
+      return this.buildMatcher()(model);
     };
 
     return Filters;
@@ -185,12 +184,16 @@
       _ref = this.sources;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         source = _ref[_i];
-        source.on('add', this.collection.add, this.collection);
+        source.on('add', this.addItem, this);
         source.on('remove', this.removeItem, this);
         source.on('reset', this.reset, this);
       }
       this.reset();
     }
+
+    Union.prototype.addItem = function(model) {
+      if (!this.collection.get(model.id)) return this.collection.add(model);
+    };
 
     Union.prototype.removeItem = function(model) {
       if (!_(this.sources).any(function(source) {
@@ -201,9 +204,17 @@
     };
 
     Union.prototype.reset = function() {
-      return this.collection.reset(_.flatten(this.sources.map(function(s) {
-        return s.toArray();
-      })));
+      var s;
+      return this.collection.reset(_.flatten((function() {
+        var _i, _len, _ref, _results;
+        _ref = this.sources;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          s = _ref[_i];
+          _results.push(s.toArray());
+        }
+        return _results;
+      }).call(this)));
     };
 
     return Union;
